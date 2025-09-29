@@ -27,12 +27,14 @@ import threading
 import traceback
 import uuid
 from io import BytesIO
+from pathlib import Path
 
 import torch
 import trimesh
 import uvicorn
 from PIL import Image
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 
 from hy3dgen.rembg import BackgroundRemover
@@ -240,6 +242,27 @@ app.add_middleware(
     allow_headers=["*"],  # 允许所有头部
 )
 
+# Serve the React frontend
+frontend_dist = Path("dist")
+if frontend_dist.exists():
+    app.mount("/static", StaticFiles(directory="dist/assets"), name="static")
+    
+    @app.get("/")
+    async def serve_frontend():
+        return FileResponse("dist/index.html")
+    
+    @app.get("/{path:path}")
+    async def serve_frontend_routes(path: str):
+        # Check if it's an API route
+        if path.startswith("api/"):
+            return {"error": "API endpoint not found"}
+        
+        # For any other route, serve the React app
+        file_path = frontend_dist / path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(file_path)
+        else:
+            return FileResponse("dist/index.html")
 
 @app.post("/generate")
 async def generate(request: Request):
