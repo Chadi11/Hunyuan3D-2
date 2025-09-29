@@ -11,6 +11,7 @@ export default {
         cloudy: '#B1ADA1',
         pampas: '#F4F3EE',
         white: '#FFFFFF',
+        border: '#e5e7eb',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
